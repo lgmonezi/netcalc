@@ -17,3 +17,9 @@ utils.o: utils.c utils.h
 
 clean:
 	rm -f netcalc *.o
+
+install:
+	cp netcalc /usr/bin
+
+uninstall:
+	rm /usr/bin/netcalc
