@@ -1,18 +1,27 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include "data.h"
+#include "output.h"
 #include "terminal.h"
 
+void die(const char *s) {
+    write(STDERR_FILENO, "\x1b[2J]", 4);
+    write(STDERR_FILENO, "\x1b[H]", 3);
+    perror(s);
+    exit(EXIT_FAILURE);
+}
+
 void enableRawMode() {
-    if(tcgetattr(STDIN_FILENO, &orig_termios) == -1) {
+    if(tcgetattr(STDIN_FILENO, &E.orig_termios) == -1) {
         die("tcgetattr");
     }
 
     atexit(disableRawMode);
 
-    struct termios raw = orig_termios;
+    struct termios raw = E.orig_termios;
     raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | IXON);
     raw.c_oflag &= ~(OPOST);
     raw.c_cflag |= (CS8);
@@ -26,7 +35,7 @@ void enableRawMode() {
 }
 
 void disableRawMode() {
-    if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1) {
+    if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1) {
         die("tcsetattr");
     }
 }
@@ -42,7 +51,14 @@ char editorReadKey() {
     return c;
 }
 
-void die(const char *s) {
-    perror(s);
-    exit(EXIT_FAILURE);
+int getWindowSize(int *rows, int *cols) {
+    struct winsize ws;
+    if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
+        return -1;
+    }
+    *cols = ws.ws_col;
+    *rows = ws.ws_row;
+    return 0;
 }
+
+
