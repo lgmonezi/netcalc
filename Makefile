@@ -1,4 +1,6 @@
-all: netcalc
+.PHONY: all kilo clean
+
+all: netcalc kilo
 
 netcalc: main.o print.o taxes.o utils.o
 	gcc -g -Wall -o netcalc main.o print.o taxes.o utils.o
@@ -15,8 +17,12 @@ taxes.o: taxes.c taxes.h utils.h
 utils.o: utils.c utils.h
 	gcc -c -g -Wall utils.c
 
+kilo:
+	make -C kilo all
+
 clean:
 	rm -f netcalc *.o
+	make -C kilo clean
 
 install:
 	cp netcalc /usr/bin
