@@ -4,7 +4,7 @@
 #include "terminal.h"
 
 void initEditor() {
-    if(getWindowSize(&E.screenrows, &E.screencols) == -1) {
+    if(getWindowSize(&E.screenrows, &E.screencols)) {
         die("getWindowSize");
     }
 }

@@ -1,8 +1,12 @@
+#include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include "input.h"
-#include "output.h"
 #include "terminal.h"
+
+bool input_read_byte(char *c) {
+    return read(STDIN_FILENO, c, 1) == 1;
+}
 
 void editorProcessKeyPress() {
     char c = editorReadKey();

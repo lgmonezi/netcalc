@@ -1,9 +1,12 @@
+#include <ctype.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include "data.h"
+#include "input.h"
 #include "output.h"
 #include "terminal.h"
 
@@ -51,14 +54,34 @@ char editorReadKey() {
     return c;
 }
 
-int getWindowSize(int *rows, int *cols) {
+bool getCursorPosition(int *rows, int *cols) {
+    char buf[32];
+    unsigned int i = 0;
+    if(!output_write(DEVICE_STATUS_REPORT_ACTIVE_POSITION)) {
+        return false;
+    }
+    for(; i < sizeof(buf) - 1; i++) {
+        if(!input_read_byte(&buf[i]) || buf[i] == 'R') {
+            break;
+        }
+    }
+    buf[i] = '\0';
+    if(buf[0] != '\x1b' || buf[1] != '[') {
+        return false;
+    }
+    return sscanf(&buf[2], "%d;%d", rows, cols) == 2;
+}
+
+bool getWindowSize(int *rows, int *cols) {
     struct winsize ws;
-    if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
-        return -1;
+    if(1 || ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
+        if(!output_write("\x1b[999C\x1b[999B")) {
+            return false;
+        }
+        return getCursorPosition(rows, cols);
     }
     *cols = ws.ws_col;
     *rows = ws.ws_row;
-    return 0;
+    return true;
 }
-
 

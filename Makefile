@@ -23,9 +23,3 @@ kilo:
 clean:
 	rm -f netcalc *.o
 	make -C kilo clean
-
-install:
-	cp netcalc /usr/bin
-
-uninstall:
-	rm /usr/bin/netcalc
